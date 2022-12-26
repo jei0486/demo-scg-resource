@@ -1,0 +1,77 @@
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 10
+      minimumNumberOfCalls: 2
+      failureRateThreshold: 50
+      waitDurationInOpenState: 60000           # {Circuit Breaker유지시간 default: 60000 }
+    instances:
+      mycb:
+        baseConfig: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+
+logging:
+  level:
+    root: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+  pattern:
+    console: "[%d{HH:mm:ss.SSS}][%-5level][%logger{36}.%method:%line] - %msg%n"
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          introspection-uri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/token/introspect
+          client-id: demo-client
+          client-secret: 83f3e948-3f8c-49da-af7f-87a42d5ea6fd
+        jwt:
+          issuer-uri: http://127.0.0.1:8080/auth/realms/demo
+          jwk-set-uri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/certs
+
+#      resourceserver:
+#        jwt:
+#          issuer-uri: http://127.0.0.1:8080/auth/realms/demo
+#          jwk-set-uri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/certs
+
+  cloud:
+    gateway:
+      default-filters:
+        - TokenRelay
+      routes:
+        - id: demo-fe-board
+          uri: http://localhost:8088/
+          predicates:
+            - name: Path
+              args:
+                patterns: /boards/**
+            - name: Method
+              args:
+                methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+
+        - id: demo-fe-api
+          uri: http://localhost:8088/
+          predicates:
+            - Path=/api/**
+server:
+  port: 19090

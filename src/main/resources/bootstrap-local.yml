@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: demo-scg
+  cloud:
+    kubernetes:
+      enabled: false # enables all the sub-configurations
+      reload:
+        enabled: false
+        monitoring-config-maps: false
+      config:
+        enabled: false
